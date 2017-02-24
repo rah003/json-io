@@ -453,10 +453,10 @@ public class MetaUtils
                 }
             }
         } catch (Exception e) {
-            System.out.println("OOPS:" + e.getLocalizedMessage());
+            System.out.println("Failed to load whitelist of cache key types with " + e.getLocalizedMessage());
             e.printStackTrace();
         }
-        System.out.println("no dice:" + className);
+        System.out.println("Remote invocation of " + className + " as part of cache key is forbidden in current configuration.");
         return false;
     }
 
