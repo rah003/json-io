@@ -285,6 +285,18 @@
         </dependency>
 
         <dependency>
+            <groupId>info.magnolia</groupId>
+            <artifactId>magnolia-core</artifactId>
+            <version>5.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>info.magnolia.cache</groupId>
+            <artifactId>magnolia-cache-browser-app</artifactId>
+            <version>5.5.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.cedarsoftware</groupId>
             <artifactId>java-util</artifactId>
             <version>${version.java-util}</version>

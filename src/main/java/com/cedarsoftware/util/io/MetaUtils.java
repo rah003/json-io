@@ -1,21 +1,49 @@
 package com.cedarsoftware.util.io;
 
-import java.lang.reflect.*;
+import static java.lang.reflect.Modifier.isPrivate;
+import static java.lang.reflect.Modifier.isProtected;
+import static java.lang.reflect.Modifier.isPublic;
+
+import info.magnolia.cache.browser.CacheBrowserAppModule;
+import info.magnolia.module.ModuleRegistry;
+import info.magnolia.objectfactory.Components;
+
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TimeZone;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static java.lang.reflect.Modifier.isPrivate;
-import static java.lang.reflect.Modifier.isProtected;
-import static java.lang.reflect.Modifier.isPublic;
 
 /**
  * This utility class has the methods mostly related to reflection related code.
@@ -39,7 +67,7 @@ import static java.lang.reflect.Modifier.isPublic;
 public class MetaUtils
 {
     private MetaUtils () {}
-    
+
     private static final Map<Class, Map<String, Field>> classMetaCache = new ConcurrentHashMap<Class, Map<String, Field>>();
     private static final Set<Class> prims = new HashSet<Class>();
     private static final Map<String, Class> nameToClass = new HashMap<String, Class>();
@@ -55,6 +83,7 @@ public class MetaUtils
     private static final Map unmodifiableSortedMap = Collections.unmodifiableSortedMap(new TreeMap());
     static final ThreadLocal<SimpleDateFormat> dateFormat = new ThreadLocal<SimpleDateFormat>()
     {
+        @Override
         public SimpleDateFormat initialValue()
         {
             return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
@@ -396,7 +425,9 @@ public class MetaUtils
         Class currentClass = null;
         if (null == primitiveArray)
         {
-            currentClass = classLoader.loadClass(className);
+            if (whitelisted(className)) {
+                currentClass = classLoader.loadClass(className);
+            }
         }
 
         if (arrayType)
@@ -411,6 +442,26 @@ public class MetaUtils
         return currentClass;
     }
 
+    private static boolean whitelisted(String className) throws ClassNotFoundException {
+        if (className.startsWith("java.") || className.startsWith("javax.")) {
+            return true;
+        }
+        try {
+            for (String s : ((CacheBrowserAppModule) Components.getComponent(ModuleRegistry.class).getModuleInstance("cache-browser-app")).getWhitelistedKeyClasses()) {
+                if (s.equals(className)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("OOPS:" + e.getLocalizedMessage());
+            e.printStackTrace();
+        }
+        System.out.println("no dice:" + className);
+        return false;
+    }
+
+
+
     /**
      * This is a performance optimization.  The lowest 128 characters are re-used.
      *
@@ -420,7 +471,7 @@ public class MetaUtils
      */
     static Character valueOf(char c)
     {
-        return c <= 127 ? charCache[(int) c] : c;
+        return c <= 127 ? charCache[c] : c;
     }
 
     /**
@@ -587,6 +638,7 @@ public class MetaUtils
         List<Constructor> constructorList = Arrays.asList(constructors);
         Collections.sort(constructorList, new Comparator<Constructor>()
         {
+            @Override
             public int compare(Constructor c1, Constructor c2)
             {
                 int c1Vis = c1.getModifiers();
